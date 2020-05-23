@@ -8,6 +8,7 @@ pub enum Format {
     Quiet,
     Yaml,
     Json,
+    Wide,
 }
 
 impl Format {
@@ -16,6 +17,7 @@ impl Format {
             Format::Quiet => Ok(()),
             Format::Yaml => print_yaml(result, colors),
             Format::Json => print_json(result, colors),
+            Format::Wide => print_wide(result, colors),
         }
     }
 }
@@ -28,6 +30,7 @@ impl FromStr for Format {
             "yaml" | "yml" => Ok(Format::Yaml),
             "none" | "quiet" => Ok(Format::Quiet),
             "json" => Ok(Format::Json),
+            "wide" => Ok(Format::Wide),
             _ => Err(s.into())
         }
     }
@@ -67,6 +70,18 @@ fn print_yaml(result: &StepResult, opt_colours: &Option<bool>) -> Result<(), Err
 fn print_json(result: &StepResult, opt_colours: &Option<bool>) -> Result<(), Error> {
     let message = serde_json::to_string(result)?;
     let colours = opt_colours.unwrap_or(false);
+    print_message(&message, &colours, result);
+
+    Ok(())
+}
+
+fn print_wide(result: &StepResult, opt_colours: &Option<bool>) -> Result<(), Error> {
+    let message = format!(
+        "name={} description={:?} pass={} output={:?} error={:?} duration={}ms",
+        result.name, result.description, result.pass, result.output, result.error, result.duration
+    );
+
+    let colours = opt_colours.unwrap_or_else(|| atty::is(atty::Stream::Stdout));
     print_message(&message, &colours, result);
 
     Ok(())
