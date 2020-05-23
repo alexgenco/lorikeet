@@ -1,3 +1,4 @@
+pub mod format;
 pub mod graph;
 pub mod junit;
 pub mod runner;

@@ -10,6 +10,7 @@ use lorikeet::runner::run_steps;
 use lorikeet::step::{ExpectType, Outcome, RetryPolicy, RunType, Step};
 use lorikeet::submitter::StepResult;
 use lorikeet::yaml::get_steps;
+use lorikeet::format::Format;
 
 use std::time::Duration;
 
@@ -28,7 +29,15 @@ struct Arguments {
     hostname: Option<String>,
 
     #[structopt(short = "t", long = "terminal", help = "Force terminal colours")]
-    term: bool,
+    term: Option<bool>,
+
+    #[structopt(
+        short = "f",
+        long = "format",
+        help = "Set output format",
+        default_value = "yaml"
+    )]
+    format: Format,
 
     #[structopt(help = "Test Plan", default_value = "test.yml")]
     test_plan: String,
@@ -60,8 +69,11 @@ async fn main() {
     debug!("Loading Steps from `{}`", opt.test_plan);
 
     let mut has_errors = false;
+    let mut format = opt.format;
 
-    let colours = atty::is(atty::Stream::Stdout) || opt.term;
+    if opt.quiet {
+        format = Format::Quiet;
+    }
 
     let mut results = Vec::new();
 
@@ -76,10 +88,8 @@ async fn main() {
         }
 
         let result = StepResult::from(step);
-        if !opt.quiet {
-            result.terminal_print(&colours);
-        }
 
+        format.on_result(&result, &opt.term).expect("Failed to format result");
         results.push(result);
     }
 

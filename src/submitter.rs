@@ -1,4 +1,3 @@
-use colored::*;
 use reqwest::IntoUrl;
 use serde::{Deserialize, Serialize};
 
@@ -47,48 +46,6 @@ pub async fn submit_webhook<U: IntoUrl, I: Into<String>>(
     builder.send().await?;
 
     Ok(())
-}
-
-impl StepResult {
-    pub fn terminal_print(&self, colours: &bool) {
-        let mut message = format!("- name: {}\n", self.name);
-
-        if let Some(ref description) = self.description {
-            message.push_str(&format!("  description: {}\n", description))
-        }
-
-        message.push_str(&format!("  pass: {}\n", self.pass));
-
-        if self.output != "" {
-            if self.output.contains("\n") {
-                message.push_str(&format!(
-                    "  output: |\n    {}\n",
-                    self.output.replace("\n", "\n    ")
-                ));
-            } else {
-                message.push_str(&format!("  output: {}\n", self.output));
-            }
-        }
-
-        if let Some(ref error) = self.error {
-            message.push_str(&format!("  error: {}\n", error));
-        }
-
-        message.push_str(&format!("  duration: {}ms\n", self.duration));
-
-        if *colours {
-            match self.pass {
-                true => {
-                    println!("{}", message.green().bold());
-                }
-                false => {
-                    println!("{}", message.red().bold());
-                }
-            }
-        } else {
-            println!("{}", message);
-        }
-    }
 }
 
 impl From<Step> for StepResult {
