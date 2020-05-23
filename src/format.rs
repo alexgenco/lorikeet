@@ -7,6 +7,7 @@ use std::io::Error;
 pub enum Format {
     Quiet,
     Yaml,
+    Json,
 }
 
 impl Format {
@@ -14,6 +15,7 @@ impl Format {
         match self {
             Format::Quiet => Ok(()),
             Format::Yaml => print_yaml(result, colors),
+            Format::Json => print_json(result, colors),
         }
     }
 }
@@ -25,6 +27,7 @@ impl FromStr for Format {
         match s.to_lowercase().as_str() {
             "yaml" | "yml" => Ok(Format::Yaml),
             "none" | "quiet" => Ok(Format::Quiet),
+            "json" => Ok(Format::Json),
             _ => Err(s.into())
         }
     }
@@ -56,6 +59,14 @@ fn print_yaml(result: &StepResult, opt_colours: &Option<bool>) -> Result<(), Err
     }
 
     message.push_str(&format!("  duration: {}ms\n", result.duration));
+    print_message(&message, &colours, result);
+
+    Ok(())
+}
+
+fn print_json(result: &StepResult, opt_colours: &Option<bool>) -> Result<(), Error> {
+    let message = serde_json::to_string(result)?;
+    let colours = opt_colours.unwrap_or(false);
     print_message(&message, &colours, result);
 
     Ok(())
